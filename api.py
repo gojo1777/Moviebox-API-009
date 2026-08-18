@@ -1,11 +1,25 @@
 import re
+import requests
+from fastapi.responses import StreamingResponse
+from fastapi import HTTPException
 import json
 import httpx
 import asyncio
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+import requests
+from fastapi.responses import StreamingResponse
 
+@app.get("/proxy-stream")
+def proxy_stream(url: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://www.moviebox.ph/"
+    }
+    req = requests.get(url, headers=headers, stream=True)
+    return StreamingResponse(req.iter_content(chunk_size=1024*1024), media_type=req.headers.get("content-type"))
+    
 app = FastAPI(
     title="MovieBox API Pro",
     description="Full Pure REST API for moviebox.ph — Fixed Streaming Endpoint",
@@ -279,6 +293,21 @@ async def dashboard():
     </html>
     """
     return HTMLResponse(content=html_content)
+    @app.get("/proxy-stream")
+def proxy_stream(url: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://www.moviebox.ph/"
+    }
+    try:
+        req = requests.get(url, headers=headers, stream=True)
+        return StreamingResponse(
+            req.iter_content(chunk_size=1024 * 1024),
+            media_type=req.headers.get("content-type", "video/mp4")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
 
 @app.get("/home")
 async def get_home():
